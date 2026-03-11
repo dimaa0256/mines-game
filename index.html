@@ -3,68 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Казино с Сапером</title>
+    <title>Game</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        #game-container { display: flex; justify-content: center; gap: 40px; margin-top: 50px; }
-        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .mine-field { display: grid; grid-template-columns: repeat(5, 50px); gap: 5px; margin-bottom: 15px; }
+        body { font-family: sans-serif; margin: 20px; background-color: #1a1a1a; color: white; }
+        #game-container { display: flex; justify-content: center; gap: 30px; }
+        .section { background: #2a2a2a; padding: 20px; border-radius: 8px; }
+        .mine-field { display: grid; grid-template-columns: repeat(5, 50px); gap: 5px; }
         .mine-cell { 
-            width: 50px; height: 50px; border: 1px solid #ccc; 
+            width: 50px; height: 50px; border: 1px solid #444; 
             cursor: pointer; display: flex; justify-content: center; 
-            align-items: center; background: #eee; font-weight: bold;
+            align-items: center; background: #333; 
         }
-        .mine-cell.revealed { background: #ddd; cursor: default; }
-        .mine-cell.bomb { background: #ff4d4d; }
-        button { padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
-        input { padding: 10px; margin-right: 5px; border: 1px solid #ccc; border-radius: 5px; }
-        .vip-badge { color: #d4af37; font-weight: bold; border: 1px solid #d4af37; padding: 10px; margin-top: 10px; }
+        .mine-cell.revealed { background: #444; }
+        .mine-cell.bomb { background: #800; }
+        button { padding: 10px; cursor: pointer; background: #444; color: white; border: 1px solid #666; }
+        input { padding: 10px; background: #333; color: white; border: 1px solid #444; }
+        .vip-panel { border: 1px solid gold; padding: 15px; margin-top: 10px; color: gold; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="casino-section" class="section">
-        <h2>Казино</h2>
+    <div class="section">
+        <h2>Auth</h2>
         <div id="login-form">
-            <input type="text" id="username" placeholder="Введите никнейм">
-            <button onclick="checkUser()">Войти</button>
+            <input type="text" id="username" placeholder="Username">
+            <button onclick="checkUser()">Login</button>
         </div>
-        
-        <div class="vip-features" id="vip-content" style="display:none;">
-            <div class="vip-badge">💎 ДОСТУП АДМИНА: АКТИВИРОВАН</div>
-            <p>Добро пожаловать в панель управления, klimlox!</p>
-            <button onclick="location.reload()" style="background:#666">Выйти</button>
+        <div id="vip-content" style="display:none;" class="vip-panel">
+            <strong>ADMIN PANEL ACTIVE</strong>
+            <p>User: klimlox</p>
+            <button onclick="showMinesCheat()">Show Mines</button>
         </div>
     </div>
 
-    <div id="mine-section" class="section">
-        <h2>Сапер (5x5)</h2>
+    <div class="section">
+        <h2>Mines</h2>
         <div id="mine-field" class="mine-field"></div>
-        <button onclick="startNewGame()">Начать новую игру</button>
+        <br>
+        <button onclick="startNewGame()">New Game</button>
         <p id="game-status"></p>
     </div>
 </div>
 
 <script>
-    // --- VIP СИСТЕМА ---
     function checkUser() {
-        const username = document.getElementById('username').value;
-        // Тот самый измененный ник
-        if (username.toLowerCase() === 'klimlox') {
-            alert('Доступ разрешен. Привет, Босс!');
-            showVipContent();
-        } else {
-            alert('Ошибка: Доступ запрещен для этого пользователя.');
+        if (document.getElementById('username').value.toLowerCase() === 'klimlox') {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('vip-content').style.display = 'block';
         }
     }
 
-    function showVipContent() {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('vip-content').style.display = 'block';
-    }
-
-    // --- ЛОГИКА САПЕРА ---
     const FIELD_SIZE = 5;
     const MINES_COUNT = 3;
     let mines = [];
@@ -72,57 +61,51 @@
 
     function startNewGame() {
         const field = document.getElementById('mine-field');
-        const status = document.getElementById('game-status');
         field.innerHTML = '';
-        status.innerText = 'Игра началась!';
+        document.getElementById('game-status').innerText = '';
         mines = [];
         gameOver = false;
-        
-        // Создаем клетки
-        for(let i = 0; i < FIELD_SIZE * FIELD_SIZE; i++) {
+        for(let i = 0; i < 25; i++) {
             const cell = document.createElement('div');
-            cell.classList.add('mine-cell');
+            cell.className = 'mine-cell';
             cell.dataset.index = i;
-            cell.addEventListener('click', handleCellClick);
+            cell.onclick = (e) => handleCellClick(e.target);
             field.appendChild(cell);
         }
-        
-        // Расставляем мины
         while(mines.length < MINES_COUNT) {
-            let randomIndex = Math.floor(Math.random() * 25);
-            if(!mines.includes(randomIndex)) mines.push(randomIndex);
+            let r = Math.floor(Math.random() * 25);
+            if(!mines.includes(r)) mines.push(r);
         }
     }
 
-    function handleCellClick(event) {
+    function handleCellClick(cell) {
         if(gameOver) return;
-        const cell = event.target;
-        const index = parseInt(cell.dataset.index);
-
-        if(mines.includes(index)) {
-            // Проигрыш
+        const idx = parseInt(cell.dataset.index);
+        if(mines.includes(idx)) {
             gameOver = true;
-            revealMines();
-            document.getElementById('game-status').innerText = 'БАБАХ! Вы проиграли.';
+            revealAll();
+            document.getElementById('game-status').innerText = 'Game Over';
         } else {
-            // Безопасно
             cell.classList.add('revealed');
             cell.innerText = '💎';
-            cell.style.cursor = 'default';
+            cell.onclick = null;
         }
     }
 
-    function revealMines() {
+    function revealAll() {
         const cells = document.querySelectorAll('.mine-cell');
-        mines.forEach(index => {
-            cells[index].classList.add('bomb');
-            cells[index].innerText = '💣';
+        mines.forEach(i => {
+            cells[i].classList.add('bomb');
+            cells[i].innerText = '💣';
         });
     }
 
-    // Запуск при загрузке
+    function showMinesCheat() {
+        const cells = document.querySelectorAll('.mine-cell');
+        mines.forEach(i => cells[i].style.border = '1px solid gold');
+    }
+
     startNewGame();
 </script>
-
 </body>
 </html>
